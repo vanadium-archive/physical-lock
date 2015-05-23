@@ -1,0 +1,59 @@
+// Copyright 2015 The Vanadium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package lock defines the interface and implementation
+// for managing a physical lock.
+//
+// Each lock device runs a Vanadium RPC service that offers
+// methods for locking and unlocking it. The Vanadium RPC protocol
+// allows clients to securely communicate with this service in a
+// peer to peer manner.
+//
+// The key for a lock is a blessing obtained during lock initialization.
+// Only clients that present this blessing or extensions of it have access
+// to the lock. Clients can delegate access to the lock to other principals
+// by blessing them using this 'key' blessing.
+package lock
+
+import "v.io/v23/security"
+
+// LockStatus  indicates the status (locked or unlocked) of a lock.
+type LockStatus int32
+
+const (
+      Locked = LockStatus(0)
+      Unlocked = LockStatus(1)
+)
+
+// UnclaimedLock represents an unclaimed lock device. It is the state
+// in which the lock would be after a "factory reset".
+//
+// Claim is used to initialize the lock and create a blessing for the caller.
+//
+// Once initialized, this interface will be disabled and the device will instead
+// export the 'Lock' interface. Only principals that present a blessing obtained
+// by a call to UnclaimedLock.Claim, or an extension of it, will be authorized.
+type UnclaimedLock interface {
+     // Claim makes the device export the "Lock" interface and returns a blessing
+     // bound to the caller that can be used to invoke methods on the "Lock"
+     // interface.
+     //
+     // The 'name' is the blessing name that the device will subsequently use to
+     // authenticate to its callers.
+     Claim(name string) (security.WireBlessings | error)
+}
+
+// Lock is the interface for managing a physical lock.
+//
+// Only principals that present a blessing obtained by a call to UnclaimedLock.Claim,
+// or an extension of it, will be authorized.
+type Lock interface {
+     // Lock locks the lock.
+     Lock() error
+     // Unlock unlocks the lock.
+     Unlock() error
+     // Status returns the current status (locked or unlocked) of the
+     // lock.
+     Status() (LockStatus | error)
+}
