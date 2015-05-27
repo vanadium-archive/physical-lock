@@ -9,26 +9,71 @@ This is an example application built on the Vanadium stack.
 Features to add to the Lock server:
 
 1) Auditing: This is one of the strong features of our model, so I'd imagine that we'd want a:
+```
 AuditLog(startTime, endTime time.Time) []AuditLog | error
 type AuditLog struct {
   Blessing string
   Action LockStatus
   Timestamp time.Time
 }
-We'd also have to work out how to control access to this AuditLog. One option is to use caveats - so when "making" a new key one can choose to insert the "noadmin" caveat?
+```
+We'd also have to work out how to control access to this AuditLog. One option
+is to use caveats - so when "making" a new key one can choose to insert the
+"noadmin" caveat?
 
 Features to add to the Lock client:
 
-1) "makekey"
-
-> makekey <lockname> <for>
-makekey creates a key for the specified lock and principal.
-<lockname> is the name of the lock object for which 'key' should be created,
-and <for> is the public key of the principal to which the minted key must
-be bound to.
-
-2) "sendkey" <lockname> <email>
+1) `sendkey <lockname> <email>`
 sendkey sends a key for the specified lock and any principal with the specified
-<email> who is current running "recvkey".
+`<email>` who is currently running a `recvkey` command.
+
+# Circuitry with the RaspberryPi
+
+### Equipment
+- 10KΩ resistor
+- 1KΩ resistor
+- Magnetic switch (normally open circuit - closed when the sensor moves away)
+  (e.g. [P/N 8601 Magnetic Switch](http://www.amazon.com/gp/product/B0009SUF08/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1))
+- For now, an active buzzer to simulate a relay.
+  Will fill in the relay details here once we have that setup.
+- Breadboard, jumper cables, ribbon cable - or whatever is needed to connect to the RPi's GPIO pins
+
+### Circuitry
+
+Apologies for this unconventional, possibly unreadable circuit representation. Putting it down
+so that the author can remember! TODO(ashankar): Clean it up!
+
+The pin number assignments here work both for RaspberryPi Model B/B+ and RaspberryPi2-ModelB.
+
+```
+---(Pin 1)-------/\/\(10KΩ)/\/\---------(COM port of magnetic switch)
+                                  \
+                                   \----/\/\(1KΩ)/\/\---------(Pin 15 = GPIO22)
+                                                          \
+                                                           \----(LED)-----|
+                                                                          |
+                                                                          |
+                                          (N.O. port of magnetic switch)--|
+                                                                          |
+                                                                          |
+                                         (-ve terminal of active buzzer)--|
+                                                                          |
+                                                                          |
+                                                                          |
+                                                           (Pin 6 = GND)--|
+
+---(Pin 11 = GPIO17)-----------(+ terminal of active buzzer)
+```
 
 # Deployment
+
+To build for the RaspberryPi setup with the circuitry mentioned above:
+```
+v23 go get -u github.com/davecheney/gpio
+V23_PROFILE=arm v23 go install v.io/x/lock/lockd
+scp $V23_ROOT/release/projects/physical-lock/go/bin/lockd <rpi_scp_location>
+```
+
+If building without the `arm` profile, there are no physical switches/relays
+and instead a simulated hardware is used that uses the interrupt signal
+(SIGINT) to simulate locking/unlocking externally.
