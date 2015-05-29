@@ -23,12 +23,13 @@ import (
 
 const (
 	permsFile = "mounttable.perms"
-	// UnclaimedLockNeighborhood is the name in the local neighborhood on which
-	// an unclaimed lock server's mounttable is made visible
-	UnclaimedLockNeighborhood = "unclaimed-locks"
-	// ClaimedLockNeighborhood is the name in the local neighborhood on which
-	// a claimed lock server's mounttable is made visible
-	ClaimedLockNeighborhood = "locks"
+	// LockSuffix is the name under which a lock server is mounted in its
+	// mounttable.
+	LockSuffix = "lock"
+	// LockNeighborhoodPrefix is a prefix of the name in the local
+	// neighborhood on which a lock server's mounttable is made
+	// visible.
+	LockNhPrefix = "lock-"
 )
 
 // StartMounttable starts a local mounttable server with an authorization
@@ -36,7 +37,7 @@ const (
 // other operations to the principal specified by the provided context.
 //
 // The mounttable makes itself visible in the local neighborhood under the
-// provided 'nhName'.
+// name LockNeighborhoodPrefix + <nhName>.
 //
 // Returns the endpoint of the mounttable server and a callback to
 // be invoked to shutdown the mounttable server on success, or an error

@@ -25,10 +25,11 @@ import (
 )
 
 var (
-	cmdFindLocks = &cmdline.Command{
-		Runner: v23cmd.RunnerFunc(runFindLocks),
-		Name:   "findlocks",
-		Short:  "Find locks objects mounted in the neighborhood",
+	lockGlobPattern = path.Join("nh", locklib.LockNhPrefix+"*")
+	cmdScan         = &cmdline.Command{
+		Runner: v23cmd.RunnerFunc(runScan),
+		Name:   "scan",
+		Short:  "Scan the neighborhood for lock objects",
 		Long: `
 Globs over the neighborhood to find names of lock objects (both claimed
 and unclaimed).
@@ -87,67 +88,38 @@ Prints the current status of the specified lock.
 	}
 )
 
-func runFindLocks(ctx *context.T, env *cmdline.Env, args []string) error {
-	const (
-		unclaimedSuffix = "[UNCLAIMED]"
-		claimedSuffix   = "[CLAIMED]"
-	)
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
+func runScan(ctx *context.T, env *cmdline.Env, args []string) error {
 	ctx, stop, err := withLocalNamespace(ctx)
 	if err != nil {
 		return err
 	}
 	defer stop()
-	ns := v23.GetNamespace(ctx)
 
-	// TODO(ataly): Currently we simply glob over the neighborhood with
-	// specific patterns to find claimed and unclaimed locks, and print
-	// all the names found. Longer term, we should print a name only after
-	// verifying that the object that the name resolves to exposes the
-	// appropricate Lock or UnclaimedLock interface and authenticates with
-	// blessings that are recognized by this client.
-
-	unclaimedCh, err := ns.Glob(ctx, path.Join("nh", locklib.UnclaimedLockNeighborhood, "*"))
-	if err != nil {
-		return err
-	}
-	claimedCh, err := ns.Glob(ctx, path.Join("nh", locklib.ClaimedLockNeighborhood, "*"))
-	if err != nil {
-		// TODO(ataly): We should drain unclaimedCh to avoid a gorouting leak.
-		return err
-	}
-	loop := true
-	for loop {
-		select {
-		case v, ok := <-unclaimedCh:
-			if !ok {
-				loop = false
-			} else {
-				printObjectName(v, unclaimedSuffix)
-			}
-		case v, ok := <-claimedCh:
-			if !ok {
-				loop = false
-			} else {
-				printObjectName(v, claimedSuffix)
-			}
+	locksFound := make(map[string]bool)
+	fmt.Println("Scanning for Locks...")
+	for {
+		ch, err := v23.GetNamespace(ctx).Glob(ctx, lockGlobPattern)
+		if err != nil {
+			return err
 		}
-	}
-	for v := range unclaimedCh {
-		printObjectName(v, unclaimedSuffix)
-	}
-	for v := range claimedCh {
-		printObjectName(v, claimedSuffix)
-	}
-	return nil
-}
+		for v := range ch {
+			switch entry := v.(type) {
+			case *naming.GlobReplyEntry:
+				if name, servers := entry.Value.Name, entry.Value.Servers; len(name) != 0 && !locksFound[name] && len(servers) != 0 {
+					epStr, _ := naming.SplitAddressName(servers[0].Server)
+					ep, err := v23.NewEndpoint(epStr)
+					if err != nil {
+						continue
+					}
 
-func printObjectName(glob naming.GlobReply, suffix string) {
-	switch v := glob.(type) {
-	case *naming.GlobReplyEntry:
-		if v.Value.Name != "" {
-			fmt.Println(v.Value.Name, suffix)
+					locksFound[name] = true
+					if bn := ep.BlessingNames(); len(bn) != 0 {
+						fmt.Printf("%v [owned by %v]\n", name, bn)
+					} else {
+						fmt.Printf("%v\n", name)
+					}
+				}
+			}
 		}
 	}
 }
@@ -157,17 +129,19 @@ func runClaim(ctx *context.T, env *cmdline.Env, args []string) error {
 		return fmt.Errorf("requires exactly two arguments <lock>, <name>, provided %d", numargs)
 	}
 	lockname, name := args[0], args[1]
+	lockname = path.Join(lockname, locklib.LockSuffix)
 
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
 	ctx, stop, err := withLocalNamespace(ctx)
 	if err != nil {
 		return err
 	}
 	defer stop()
 
-	// Skip server endpoint authorization since an unclaimed lock would have
-	// roots that will not be recognized by the claimer.
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+	// TODO(ataly): We should not skip server endpoint authorization while
+	// claiming locks but instead fetch the blessing root of the lock manufacturer
+	// from an authoritative source and then appropriately authenticate the server.
 	b, err := lock.UnclaimedLockClient(lockname).Claim(ctx, name, options.SkipServerEndpointAuthorization{})
 	if err != nil {
 		return err
@@ -197,15 +171,16 @@ func updateStatus(ctx *context.T, args []string, status lock.LockStatus) error {
 		return fmt.Errorf("requires exactly one arguments <lock>, provided %d", numargs)
 	}
 	lockname := args[0]
+	lockname = path.Join(lockname, locklib.LockSuffix)
 
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
 	ctx, stop, err := withLocalNamespace(ctx)
 	if err != nil {
 		return err
 	}
 	defer stop()
 
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
 	if status == lock.Locked {
 		err = lock.LockClient(lockname).Lock(ctx)
 	} else {
@@ -224,15 +199,16 @@ func runStatus(ctx *context.T, env *cmdline.Env, args []string) error {
 		return fmt.Errorf("requires exactly one arguments <lock>, provided %d", numargs)
 	}
 	lockname := args[0]
+	lockname = path.Join(lockname, locklib.LockSuffix)
 
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
 	ctx, stop, err := withLocalNamespace(ctx)
 	if err != nil {
 		return err
 	}
 	defer stop()
 
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
 	status, err := lock.LockClient(lockname).Status(ctx)
 	if err != nil {
 		return err
@@ -285,7 +261,7 @@ func main() {
 		Long: `
 Command lock claims and manages lock objects.
 `,
-		Children: []*cmdline.Command{cmdFindLocks, cmdClaim, cmdLock, cmdUnlock, cmdStatus},
+		Children: []*cmdline.Command{cmdScan, cmdClaim, cmdLock, cmdUnlock, cmdStatus},
 	}
 	cmdline.Main(root)
 }

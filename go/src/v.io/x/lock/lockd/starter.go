@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 
 	"v.io/v23"
 	"v.io/v23/context"
@@ -16,7 +17,7 @@ import (
 	"v.io/x/lock/locklib"
 )
 
-const unclaimedLockSuffix = "unclaimed-lock-42"
+var unclaimedLockNhSuffix = "unclaimed-lock-" + fmt.Sprintf("%d", rand.Intn(1000000))
 
 // startServer checks whether the lock has been claimed and then appropriately
 // starts the server.
@@ -48,7 +49,7 @@ func startUnclaimedLockServer(ctx *context.T, configDir string) (<-chan struct{}
 	// Start a local mounttable where the unclaimed lock server would
 	// be mounted, and make this mounttable visible in the local
 	// neighborhood.
-	mtName, stopMT, err := locklib.StartMounttable(ctx, configDir, locklib.UnclaimedLockNeighborhood)
+	mtName, stopMT, err := locklib.StartMounttable(ctx, configDir, locklib.LockNhPrefix+unclaimedLockNhSuffix)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -75,8 +76,7 @@ func startUnclaimedLockServer(ctx *context.T, configDir string) (<-chan struct{}
 	}
 
 	claimed := make(chan struct{})
-	name := objectName(ctx, unclaimedLockSuffix)
-	if err := server.Serve(name, newUnclaimedLock(claimed, configDir), security.AllowEveryone()); err != nil {
+	if err := server.Serve(lockObjectName(ctx), newUnclaimedLock(claimed, configDir), security.AllowEveryone()); err != nil {
 		stopUnclaimedLock()
 		return nil, nil, err
 	}
@@ -87,10 +87,11 @@ func startUnclaimedLockServer(ctx *context.T, configDir string) (<-chan struct{}
 }
 
 func startLockServer(ctx *context.T, configDir string) (func(), error) {
+	lockNhSuffix := fmt.Sprintf("%v", v23.GetPrincipal(ctx).BlessingStore().Default())
 	// Start a local mounttable where the lock server would be
 	// mounted, and make this mounttable visible in the local
 	// neighborhood.
-	mtName, stopMT, err := locklib.StartMounttable(ctx, configDir, locklib.ClaimedLockNeighborhood)
+	mtName, stopMT, err := locklib.StartMounttable(ctx, configDir, locklib.LockNhPrefix+lockNhSuffix)
 	if err != nil {
 		return nil, err
 	}
@@ -116,8 +117,7 @@ func startLockServer(ctx *context.T, configDir string) (func(), error) {
 		return nil, err
 	}
 
-	name := objectName(ctx, fmt.Sprintf("%v", v23.GetPrincipal(ctx).BlessingStore().Default()))
-	if err := server.Serve(name, newLock(), security.DefaultAuthorizer()); err != nil {
+	if err := server.Serve(lockObjectName(ctx), newLock(), security.DefaultAuthorizer()); err != nil {
 		stopLock()
 		return nil, err
 	}
@@ -145,10 +145,10 @@ func waitToBeClaimedAndStartLockServer(ctx *context.T, configDir string, stopUnc
 	<-stop // Wait to be stopped
 }
 
-func objectName(ctx *context.T, suffix string) string {
+func lockObjectName(ctx *context.T) string {
 	nsroots := v23.GetNamespace(ctx).Roots()
 	if len(nsroots) == 0 {
 		return ""
 	}
-	return naming.Join(nsroots[0], suffix)
+	return naming.Join(nsroots[0], locklib.LockSuffix)
 }
