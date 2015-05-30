@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"v.io/v23"
@@ -25,13 +26,13 @@ import (
 )
 
 var (
-	lockGlobPattern = path.Join("nh", locklib.LockNhPrefix+"*")
-	cmdScan         = &cmdline.Command{
+	lockNhNamePrefix = path.Join("nh", locklib.LockNhPrefix)
+	cmdScan          = &cmdline.Command{
 		Runner: v23cmd.RunnerFunc(runScan),
 		Name:   "scan",
-		Short:  "Scan the neighborhood for lock objects",
+		Short:  "Scan the neighborhood for lock devices",
 		Long: `
-Globs over the neighborhood to find names of lock objects (both claimed
+Globs over the neighborhood to find lock devices (both claimed
 and unclaimed).
 `,
 	}
@@ -41,11 +42,11 @@ and unclaimed).
 		Short:  "Claim the specified lock with the provided name",
 		Long: `
 Claims the specified unclaimed lock with the provided name, and authorizes the
-principal executing this command to access the claimed lock object.
+principal executing this command to access the claimed lock.
 `,
 		ArgsName: "<lock> <name>",
 		ArgsLong: `
-<lock> is the object name of the unclaimed lock.
+<lock> is the name of the unclaimed lock.
 <name> is a name that you'd like to give to the lock, for example,
 "my_front_door" or "123_main_street.
 `,
@@ -59,7 +60,7 @@ Locks the specified lock.
 `,
 		ArgsName: "<lock>",
 		ArgsLong: `
-<lock> is the object name of the lock.
+<lock> is the name of the lock.
 `,
 	}
 	cmdUnlock = &cmdline.Command{
@@ -71,7 +72,7 @@ Unlocks the specified lock.
 `,
 		ArgsName: "<lock>",
 		ArgsLong: `
-<lock> is the object name of the lock.
+<lock> is the name of the lock.
 `,
 	}
 	cmdStatus = &cmdline.Command{
@@ -83,7 +84,22 @@ Prints the current status of the specified lock.
 `,
 		ArgsName: "<lock>",
 		ArgsLong: `
-<lock> is the object name of the lock.
+<lock> is the name of the lock.
+`,
+	}
+	cmdListKeys = &cmdline.Command{
+		Runner: v23cmd.RunnerFunc(runListKeys),
+		Name:   "listkeys",
+		Short:  "List the set of available keys",
+		Long: `
+Lists the set of available physical-lock keys and the names of the locks
+to which they apply.
+
+Each line of the list is of the form
+<lock name> <key>
+
+TODO(ataly, ashankar): Also print additional information such as when and
+from whom was the key obtained.
 `,
 	}
 )
@@ -95,6 +111,7 @@ func runScan(ctx *context.T, env *cmdline.Env, args []string) error {
 	}
 	defer stop()
 
+	lockGlobPattern := lockNhNamePrefix + "*"
 	locksFound := make(map[string]bool)
 	fmt.Println("Scanning for Locks...")
 	for {
@@ -113,14 +130,23 @@ func runScan(ctx *context.T, env *cmdline.Env, args []string) error {
 					}
 
 					locksFound[name] = true
-					if bn := ep.BlessingNames(); len(bn) != 0 {
-						fmt.Printf("%v [owned by %v]\n", name, bn)
-					} else {
-						fmt.Printf("%v\n", name)
-					}
+					printLockName(name, ep.BlessingNames())
 				}
 			}
 		}
+	}
+}
+
+func printLockName(name string, blessings []string) {
+	if !strings.HasPrefix(name, lockNhNamePrefix) {
+		return
+	}
+	lockName := strings.TrimPrefix(name, lockNhNamePrefix)
+
+	if len(blessings) != 0 {
+		fmt.Printf("%v [owned by %v]\n", lockName, blessings)
+	} else {
+		fmt.Printf("%v\n", lockName)
 	}
 }
 
@@ -128,8 +154,7 @@ func runClaim(ctx *context.T, env *cmdline.Env, args []string) error {
 	if numargs := len(args); numargs != 2 {
 		return fmt.Errorf("requires exactly two arguments <lock>, <name>, provided %d", numargs)
 	}
-	lockname, name := args[0], args[1]
-	lockname = path.Join(lockname, locklib.LockSuffix)
+	lockName, name := args[0], args[1]
 
 	ctx, stop, err := withLocalNamespace(ctx)
 	if err != nil {
@@ -142,7 +167,7 @@ func runClaim(ctx *context.T, env *cmdline.Env, args []string) error {
 	// TODO(ataly): We should not skip server endpoint authorization while
 	// claiming locks but instead fetch the blessing root of the lock manufacturer
 	// from an authoritative source and then appropriately authenticate the server.
-	b, err := lock.UnclaimedLockClient(lockname).Claim(ctx, name, options.SkipServerEndpointAuthorization{})
+	b, err := lock.UnclaimedLockClient(lockObjName(lockName)).Claim(ctx, name, options.SkipServerEndpointAuthorization{})
 	if err != nil {
 		return err
 	}
@@ -154,7 +179,7 @@ func runClaim(ctx *context.T, env *cmdline.Env, args []string) error {
 	if _, err := p.BlessingStore().Set(b, security.BlessingPattern(name)); err != nil {
 		return fmt.Errorf("failed to set (key) blessing (%v) for peer %v: %v", b, name, err)
 	}
-	fmt.Printf("Claimed lock and received key: %v\n", b)
+	fmt.Printf("Claimed lock: %v and received key: %v\n", lockName, b)
 	return nil
 }
 
@@ -170,8 +195,7 @@ func updateStatus(ctx *context.T, args []string, status lock.LockStatus) error {
 	if numargs := len(args); numargs != 1 {
 		return fmt.Errorf("requires exactly one arguments <lock>, provided %d", numargs)
 	}
-	lockname := args[0]
-	lockname = path.Join(lockname, locklib.LockSuffix)
+	lockName := args[0]
 
 	ctx, stop, err := withLocalNamespace(ctx)
 	if err != nil {
@@ -182,15 +206,15 @@ func updateStatus(ctx *context.T, args []string, status lock.LockStatus) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 	if status == lock.Locked {
-		err = lock.LockClient(lockname).Lock(ctx)
+		err = lock.LockClient(lockObjName(lockName)).Lock(ctx)
 	} else {
-		err = lock.LockClient(lockname).Unlock(ctx)
+		err = lock.LockClient(lockObjName(lockName)).Unlock(ctx)
 	}
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Updated lock %v to status: %v\n", lockname, status)
+	fmt.Printf("Updated lock %v to status: %v\n", lockName, status)
 	return nil
 }
 
@@ -198,8 +222,7 @@ func runStatus(ctx *context.T, env *cmdline.Env, args []string) error {
 	if numargs := len(args); numargs != 1 {
 		return fmt.Errorf("requires exactly one arguments <lock>, provided %d", numargs)
 	}
-	lockname := args[0]
-	lockname = path.Join(lockname, locklib.LockSuffix)
+	lockName := args[0]
 
 	ctx, stop, err := withLocalNamespace(ctx)
 	if err != nil {
@@ -209,11 +232,28 @@ func runStatus(ctx *context.T, env *cmdline.Env, args []string) error {
 
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
-	status, err := lock.LockClient(lockname).Status(ctx)
+	status, err := lock.LockClient(lockObjName(lockName)).Status(ctx)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("lock %v is: %v\n", lockname, status)
+	fmt.Printf("lock %v is: %v\n", lockName, status)
+	return nil
+}
+
+func runListKeys(ctx *context.T, env *cmdline.Env, args []string) error {
+	peerBlessings := v23.GetPrincipal(ctx).BlessingStore().PeerBlessings()
+	const format = "%-30s   %s\n"
+
+	fmt.Printf(format, "Lock", "Key")
+	for lock, key := range peerBlessings {
+		if !isValidLockName(string(lock)) {
+			continue
+		}
+		if !isKeyValidForLock(ctx, key, string(lock)) {
+			continue
+		}
+		fmt.Printf(format, lock, key)
+	}
 	return nil
 }
 
@@ -253,15 +293,36 @@ func withLocalNamespace(ctx *context.T) (*context.T, func(), error) {
 	return ctx, stop, nil
 }
 
+func lockObjName(lockName string) string {
+	return path.Join(lockNhNamePrefix+lockName, locklib.LockSuffix)
+}
+
+func isValidLockName(lock string) bool {
+	// TODO(ataly): HACK!! We should either store the set of valid names
+	// in a file that is managed by this client or somehow note in the
+	// blessing store whether a peer pattern is the name of a lock object.
+	return lock != string(security.AllPrincipals) && !strings.ContainsAny(string(lock), security.ChainSeparator)
+}
+
+func isKeyValidForLock(ctx *context.T, key security.Blessings, lock string) bool {
+	bp := security.BlessingPattern(lock + security.ChainSeparator + "key")
+	for b, _ := range v23.GetPrincipal(ctx).BlessingsInfo(key) {
+		if bp.MatchedBy(b) {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	cmdline.HideGlobalFlagsExcept()
 	root := &cmdline.Command{
 		Name:  "lock",
 		Short: "claim and manage locks",
 		Long: `
-Command lock claims and manages lock objects.
+Command lock claims and manages lock devices.
 `,
-		Children: []*cmdline.Command{cmdScan, cmdClaim, cmdLock, cmdUnlock, cmdStatus},
+		Children: []*cmdline.Command{cmdScan, cmdClaim, cmdLock, cmdUnlock, cmdStatus, cmdListKeys},
 	}
 	cmdline.Main(root)
 }

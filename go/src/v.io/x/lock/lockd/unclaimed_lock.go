@@ -7,6 +7,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"v.io/v23"
@@ -34,6 +35,14 @@ type unclaimedLock struct {
 
 func (ul *unclaimedLock) Claim(ctx *context.T, call rpc.ServerCall, name string) (security.Blessings, error) {
 	vlog.Infof("Claim called by %q", call.Security().RemoteBlessings())
+	if strings.ContainsAny(name, security.ChainSeparator) {
+		// TODO(ataly, ashankar): We have to error out in this case because of the current
+		// neighborhood setup wherein the neighborhood-name of a claimed lock's mounttable is
+		// the same as the locks's name. Since neighborhood-names aren't allowed to contain
+		// slashes, we have to disallow slashes in the lock name as well.
+		return security.Blessings{}, NewErrInvalidLockName(ctx, name, security.ChainSeparator)
+	}
+
 	var (
 		principal   = v23.GetPrincipal(ctx)
 		origDefault = principal.BlessingStore().Default()

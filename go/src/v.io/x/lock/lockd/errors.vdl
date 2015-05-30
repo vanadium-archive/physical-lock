@@ -8,4 +8,7 @@ error (
         LockAlreadyClaimed() {
                 "en": "lock has already been claimed",
         }
+        InvalidLockName(name, reason string) {
+                "en": "invalid lock name ({name}: cannot contain {reason})",
+        }
 )

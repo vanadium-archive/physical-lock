@@ -16,13 +16,20 @@ import (
 
 var (
 	ErrLockAlreadyClaimed = verror.Register("v.io/x/lock/lockd.LockAlreadyClaimed", verror.NoRetry, "{1:}{2:} lock has already been claimed")
+	ErrInvalidLockName    = verror.Register("v.io/x/lock/lockd.InvalidLockName", verror.NoRetry, "{1:}{2:} invalid lock name ({3}: cannot contain {4})")
 )
 
 func init() {
 	i18n.Cat().SetWithBase(i18n.LangID("en"), i18n.MsgID(ErrLockAlreadyClaimed.ID), "{1:}{2:} lock has already been claimed")
+	i18n.Cat().SetWithBase(i18n.LangID("en"), i18n.MsgID(ErrInvalidLockName.ID), "{1:}{2:} invalid lock name ({3}: cannot contain {4})")
 }
 
 // NewErrLockAlreadyClaimed returns an error with the ErrLockAlreadyClaimed ID.
 func NewErrLockAlreadyClaimed(ctx *context.T) error {
 	return verror.New(ErrLockAlreadyClaimed, ctx)
+}
+
+// NewErrInvalidLockName returns an error with the ErrInvalidLockName ID.
+func NewErrInvalidLockName(ctx *context.T, name string, reason string) error {
+	return verror.New(ErrInvalidLockName, ctx, name, reason)
 }
