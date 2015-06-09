@@ -6,6 +6,12 @@ This is an example application built on the Vanadium stack.
 
 # Development
 
+Conventions
+
+* The name used to claim a lock cannot contain slashes. It is also the blessing name
+  that the lock subsequently authenticates with.
+* A key to a claimed lock is a blessing with a name matching the pattern "<lock name>/key"
+
 Features to add to the Lock server:
 
 1) Auditing: This is one of the strong features of our model, so I'd imagine that we'd want a:
@@ -23,9 +29,9 @@ is to use caveats - so when "making" a new key one can choose to insert the
 
 Features to add to the Lock client:
 
-1) `sendkey <lockname> <email>`
-sendkey sends a key for the specified lock and any principal with the specified
-`<email>` who is currently running a `recvkey` command.
+1) Support more caveats in `sendkey`
+* TimeRange Caveat
+* AskForPermission Caveat
 
 # Circuitry with the RaspberryPi
 
