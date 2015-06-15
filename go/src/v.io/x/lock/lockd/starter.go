@@ -15,6 +15,7 @@ import (
 
 	"v.io/x/lib/vlog"
 	"v.io/x/lock/locklib"
+	"v.io/x/ref/lib/xrpc"
 )
 
 var unclaimedLockNhSuffix = "unclaimed-lock-" + fmt.Sprintf("%d", rand.Intn(1000000))
@@ -58,7 +59,8 @@ func startUnclaimedLockServer(ctx *context.T, configDir string) (<-chan struct{}
 		stopMT()
 		return nil, nil, err
 	}
-	server, err := v23.NewServer(ctx)
+	claimed := make(chan struct{})
+	server, err := xrpc.NewServer(ctx, lockObjectName(ctx), newUnclaimedLock(claimed, configDir), security.AllowEveryone())
 	if err != nil {
 		stopMT()
 		return nil, nil, err
@@ -69,20 +71,8 @@ func startUnclaimedLockServer(ctx *context.T, configDir string) (<-chan struct{}
 		vlog.Infof("Stopped unclaimed lock server...")
 		stopMT()
 	}
-	endpoints, err := server.Listen(v23.GetListenSpec(ctx))
-	if err != nil {
-		stopUnclaimedLock()
-		return nil, nil, err
-	}
-
-	claimed := make(chan struct{})
-	if err := server.Serve(lockObjectName(ctx), newUnclaimedLock(claimed, configDir), security.AllowEveryone()); err != nil {
-		stopUnclaimedLock()
-		return nil, nil, err
-	}
-
 	vlog.Infof("Started unclaimed lock server\n")
-	vlog.Infof("ENDPOINT: %v\n", endpoints[0].Name())
+	vlog.Infof("ENDPOINT: %v\n", server.Status().Endpoints[0].Name())
 	return claimed, stopUnclaimedLock, nil
 }
 
@@ -100,7 +90,7 @@ func startLockServer(ctx *context.T, configDir string) (func(), error) {
 		stopMT()
 		return nil, err
 	}
-	server, err := v23.NewServer(ctx)
+	server, err := xrpc.NewServer(ctx, lockObjectName(ctx), newLock(), security.DefaultAuthorizer())
 	if err != nil {
 		stopMT()
 		return nil, err
@@ -111,19 +101,8 @@ func startLockServer(ctx *context.T, configDir string) (func(), error) {
 		vlog.Infof("Stopped lock server...")
 		stopMT()
 	}
-	endpoints, err := server.Listen(v23.GetListenSpec(ctx))
-	if err != nil {
-		stopLock()
-		return nil, err
-	}
-
-	if err := server.Serve(lockObjectName(ctx), newLock(), security.DefaultAuthorizer()); err != nil {
-		stopLock()
-		return nil, err
-	}
-
 	vlog.Infof("Started lock server\n")
-	vlog.Infof("ENDPOINT: %v\n", endpoints[0].Name())
+	vlog.Infof("ENDPOINT: %v\n", server.Status().Endpoints[0].Name())
 	return stopLock, nil
 }
 
