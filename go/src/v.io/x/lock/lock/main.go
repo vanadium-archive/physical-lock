@@ -24,7 +24,6 @@ import (
 	"v.io/x/lock"
 	"v.io/x/lock/locklib"
 	"v.io/x/ref/lib/v23cmd"
-	"v.io/x/ref/lib/xrpc"
 	_ "v.io/x/ref/runtime/factories/static"
 )
 
@@ -358,7 +357,7 @@ func runRecvKey(ctx *context.T, env *cmdline.Env, args []string) error {
 		env:    env,
 		notify: make(chan error),
 	}
-	server, err := xrpc.NewServer(ctx, recvKeySuffix, service, security.AllowEveryone())
+	_, server, err := v23.WithNewServer(ctx, recvKeySuffix, service, security.AllowEveryone())
 	if err != nil {
 		return fmt.Errorf("failed to create server to receive keys: %v", err)
 	}

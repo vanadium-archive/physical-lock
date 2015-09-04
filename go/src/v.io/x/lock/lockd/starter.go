@@ -12,10 +12,8 @@ import (
 	"v.io/v23/context"
 	"v.io/v23/naming"
 	"v.io/v23/security"
-
 	"v.io/x/lib/vlog"
 	"v.io/x/lock/locklib"
-	"v.io/x/ref/lib/xrpc"
 )
 
 var unclaimedLockNhSuffix = "unclaimed-lock-" + fmt.Sprintf("%d", rand.Intn(1000000))
@@ -60,7 +58,7 @@ func startUnclaimedLockServer(ctx *context.T, configDir string) (<-chan struct{}
 		return nil, nil, err
 	}
 	claimed := make(chan struct{})
-	server, err := xrpc.NewServer(ctx, lockObjectName(ctx), newUnclaimedLock(claimed, configDir), security.AllowEveryone())
+	_, server, err := v23.WithNewServer(ctx, lockObjectName(ctx), newUnclaimedLock(claimed, configDir), security.AllowEveryone())
 	if err != nil {
 		stopMT()
 		return nil, nil, err
@@ -90,7 +88,7 @@ func startLockServer(ctx *context.T, configDir string) (func(), error) {
 		stopMT()
 		return nil, err
 	}
-	server, err := xrpc.NewServer(ctx, lockObjectName(ctx), newLock(), security.DefaultAuthorizer())
+	_, server, err := v23.WithNewServer(ctx, lockObjectName(ctx), newLock(), security.DefaultAuthorizer())
 	if err != nil {
 		stopMT()
 		return nil, err
