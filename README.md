@@ -145,7 +145,7 @@ Building the lock service for the RaspberryPi
 
 ```
 v23 go get -u github.com/davecheney/gpio
-V23_PROFILE=arm v23 go install v.io/x/lock/lockd
+JIRI_PROFILE=arm v23 go install v.io/x/lock/lockd
 scp $V23_ROOT/release/projects/physical-lock/go/bin/lockd <rpi_scp_location>
 ```
 
