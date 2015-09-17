@@ -146,7 +146,7 @@ Building the lock service for the RaspberryPi
 ```
 v23 go get -u github.com/davecheney/gpio
 JIRI_PROFILE=arm v23 go install v.io/x/lock/lockd
-scp $V23_ROOT/release/projects/physical-lock/go/bin/lockd <rpi_scp_location>
+scp $JIRI_ROOT/release/projects/physical-lock/go/bin/lockd <rpi_scp_location>
 ```
 
 If building without the `arm` profile, there are no physical switches/relays
@@ -187,8 +187,8 @@ using the `principal` tool to obtain a blessing from `dev.v.io`.
 v23 go install v.io/x/ref/cmd/principal
 v23 go install v.io/x/ref/services/agent/...
 
-$V23_ROOT/release/go/bin/agent --v23.credentials=<creds> bash
-$V23_ROOT/release/go/bin/principal seekblessings
+$JIRI_ROOT/release/go/bin/agent --v23.credentials=<creds> bash
+$JIRI_ROOT/release/go/bin/principal seekblessings
 ``` 
 
 Above, `<creds>` points to a directory where the tool's Vanadium
