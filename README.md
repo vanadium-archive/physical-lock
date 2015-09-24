@@ -144,8 +144,8 @@ checks the status of the ping `GPIO22`.
 Building the lock service for the RaspberryPi
 
 ```
-v23 go get -u github.com/davecheney/gpio
-JIRI_PROFILE=arm v23 go install v.io/x/lock/lockd
+jiri go get -u github.com/davecheney/gpio
+JIRI_PROFILE=arm jiri go install v.io/x/lock/lockd
 scp $JIRI_ROOT/release/projects/physical-lock/go/bin/lockd <rpi_scp_location>
 ```
 
@@ -173,7 +173,7 @@ a lock device.
 The first step is to build the command-line tool.
 
 ```
-v23 go install v.io/x/lock/lock
+jiri go install v.io/x/lock/lock
 ```
 
 In the rest of this section, we specify all commands
@@ -184,8 +184,8 @@ All commands must be run under an [agent] that has a blessing from
 using the `principal` tool to obtain a blessing from `dev.v.io`.
 
 ```
-v23 go install v.io/x/ref/cmd/principal
-v23 go install v.io/x/ref/services/agent/...
+jiri go install v.io/x/ref/cmd/principal
+jiri go install v.io/x/ref/services/agent/...
 
 $JIRI_ROOT/release/go/bin/agent --v23.credentials=<creds> bash
 $JIRI_ROOT/release/go/bin/principal seekblessings
