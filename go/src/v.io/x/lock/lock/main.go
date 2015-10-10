@@ -243,7 +243,10 @@ func runClaim(ctx *context.T, env *cmdline.Env, args []string) error {
 	// TODO(ataly): We should not skip server endpoint authorization while
 	// claiming locks but instead fetch the blessing root of the lock manufacturer
 	// from an authoritative source and then appropriately authenticate the server.
-	b, err := lock.UnclaimedLockClient(lockObjName(lockName)).Claim(ctx, name, options.SkipServerEndpointAuthorization{})
+	b, err := lock.UnclaimedLockClient(lockObjName(lockName)).Claim(
+		ctx,
+		name,
+		options.ServerAuthorizer{security.AllowEveryone()})
 	if err != nil {
 		return err
 	}
