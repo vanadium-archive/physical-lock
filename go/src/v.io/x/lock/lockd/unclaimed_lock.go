@@ -92,7 +92,7 @@ func (ul *unclaimedLock) makeKey(principal security.Principal, name string, remo
 	if err := principal.BlessingStore().SetDefault(lockBlessing); err != nil {
 		return security.Blessings{}, err
 	}
-	if err := principal.AddToRoots(lockBlessing); err != nil {
+	if err := security.AddToRoots(principal, lockBlessing); err != nil {
 		return security.Blessings{}, err
 	}
 

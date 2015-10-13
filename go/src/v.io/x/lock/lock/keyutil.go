@@ -63,7 +63,7 @@ func saveKeyForLock(ctx *context.T, key security.Blessings, lockName string) err
 	if _, err := p.BlessingStore().Set(key, security.BlessingPattern(lockName)); err != nil {
 		return fmt.Errorf("failed to save key %v for lock %v", key, lockName)
 	}
-	if err := p.AddToRoots(key); err != nil {
+	if err := security.AddToRoots(p, key); err != nil {
 		return fmt.Errorf("failed to save key %v for lock %v", key, lockName)
 	}
 	return nil

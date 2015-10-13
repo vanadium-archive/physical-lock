@@ -252,7 +252,7 @@ func runClaim(ctx *context.T, env *cmdline.Env, args []string) error {
 	}
 
 	p := v23.GetPrincipal(ctx)
-	if err := p.AddToRoots(b); err != nil {
+	if err := security.AddToRoots(p, b); err != nil {
 		return fmt.Errorf("failed to add (key) blessing (%v) to roots: %v", b, err)
 	}
 	if _, err := p.BlessingStore().Set(b, security.BlessingPattern(name)); err != nil {
