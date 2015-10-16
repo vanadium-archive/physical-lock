@@ -26,7 +26,7 @@ func isValidLockName(lockName string) bool {
 
 func isKeyValidForLock(ctx *context.T, key security.Blessings, lockName string) bool {
 	bp := security.BlessingPattern(lockName + security.ChainSeparator + "key")
-	for b, _ := range v23.GetPrincipal(ctx).BlessingsInfo(key) {
+	for _, b := range security.BlessingNames(v23.GetPrincipal(ctx), key) {
 		if bp.MatchedBy(b) {
 			return true
 		}
