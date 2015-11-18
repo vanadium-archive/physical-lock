@@ -64,7 +64,7 @@ type UnclaimedLockClientMethods interface {
 	//
 	// The 'name' is the blessing name that the device will subsequently use to
 	// authenticate to its callers.
-	Claim(ctx *context.T, name string, opts ...rpc.CallOpt) (security.Blessings, error)
+	Claim(_ *context.T, name string, _ ...rpc.CallOpt) (security.Blessings, error)
 }
 
 // UnclaimedLockClientStub adds universal methods to UnclaimedLockClientMethods.
@@ -105,7 +105,7 @@ type UnclaimedLockServerMethods interface {
 	//
 	// The 'name' is the blessing name that the device will subsequently use to
 	// authenticate to its callers.
-	Claim(ctx *context.T, call rpc.ServerCall, name string) (security.Blessings, error)
+	Claim(_ *context.T, _ rpc.ServerCall, name string) (security.Blessings, error)
 }
 
 // UnclaimedLockServerStubMethods is the server interface containing
