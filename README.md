@@ -56,14 +56,14 @@ with the device and send it requests to lock, unlock or determine the status.
 
 An out-of-box lock device comes with pre-installed credentials (private key and
 blessings) from its manufacturer. For instance, it may have blessings of the form
-`<lock manufacturer>/<serial no>`. The `UnclaimedLock` interface exposed by it
+`<lock manufacturer>:<serial no>`. The `UnclaimedLock` interface exposed by it
 is accessible to everyone.
 
 When the lock is claimed with a specific name, it blesses itseld under the name
 and uses that blessing to subsequently authenticate to clients. It also creates
 a blessing for the claimer by extending this (self) blessing with the extension
 `key`. For e.g., a lock claimed with the name `front-door` will subsequently 
-authenticate with the blessing `front-door`, and grant the blessing `front-door/key`
+authenticate with the blessing `front-door`, and grant the blessing `front-door:key`
 to the claimer.
 
 The blessing granted to the claimer is the _key_ to the lock. It provides access to
@@ -72,8 +72,8 @@ extensions of this _key_ blessing are also authorized to access the `Lock` inter
 
 Access to the lock can be shared with other principals by blessing them with the
 _key_ blessing. Appropriate caveats may be added to this blessing to limit the scope
-of use. For e.g., the key `front-door/key` can be shared with a house guest for a
-limited period by extending it as `front-door/key/houseguest` with an expiration caveat.
+of use. For e.g., the key `front-door:key` can be shared with a house guest for a
+limited period by extending it as `front-door:key:houseguest` with an expiration caveat.
 
 ## Device Discovery
 
@@ -227,7 +227,7 @@ of the locks to which they apply.
 lock listkeys
 ```
 
-For example, as a result of the previous claim, the key `front-door/key` would show up
+For example, as a result of the previous claim, the key `front-door:key` would show up
 as being available to this tool for the lock `front-door`.
 
 ## Locking and Unlocking
@@ -288,7 +288,7 @@ The `sendkey` command would cause the receiver to see a prompt specifying
 the name of the key received and the blessings of the sender. Once the 
 receiver confirms saving the key, he/she would be able to use it to interact
 with the lock `front-door` for next 10 minutes. Executing the `listkeys`
-command would reveal the key `front-door/key/friend` along with its expiration time.
+command would reveal the key `front-door:key:friend` along with its expiration time.
 
 # Future Work
 

@@ -32,7 +32,7 @@ const (
 	recvKeySuffix          = "recvkey"
 	lockUserNhPrefix       = "user-"
 	lockUserNhGlobPrefix   = "nh/user-"
-	vanadiumBlessingPrefix = "dev.v.io/u"
+	vanadiumBlessingPrefix = "dev.v.io:u"
 )
 
 var (
