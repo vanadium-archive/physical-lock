@@ -75,7 +75,8 @@ func startUnclaimedLockServer(ctx *context.T, configDir string) (<-chan struct{}
 }
 
 func startLockServer(ctx *context.T, configDir string) (func(), error) {
-	lockNhSuffix := fmt.Sprintf("%v", v23.GetPrincipal(ctx).BlessingStore().Default())
+	blessings, _ := v23.GetPrincipal(ctx).BlessingStore().Default()
+	lockNhSuffix := fmt.Sprint(blessings)
 	// Start a local mounttable where the lock server would be
 	// mounted, and make this mounttable visible in the local
 	// neighborhood.

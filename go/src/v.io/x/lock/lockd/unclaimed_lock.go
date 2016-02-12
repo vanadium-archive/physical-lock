@@ -44,9 +44,9 @@ func (ul *unclaimedLock) Claim(ctx *context.T, call rpc.ServerCall, name string)
 	}
 
 	var (
-		principal   = v23.GetPrincipal(ctx)
-		origDefault = principal.BlessingStore().Default()
-		restore     = func() error {
+		principal      = v23.GetPrincipal(ctx)
+		origDefault, _ = principal.BlessingStore().Default()
+		restore        = func() error {
 			// TODO(ataly): Remove roots of current default blessing if needed
 			// (i.e., if current default != origDefault).
 			if err := principal.BlessingStore().SetDefault(origDefault); err != nil {

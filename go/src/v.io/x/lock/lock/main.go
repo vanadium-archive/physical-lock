@@ -451,8 +451,9 @@ func vUser(bNames ...string) string {
 
 func lockUserNhName(ctx *context.T) string {
 	var (
-		principal = v23.GetPrincipal(ctx)
-		bNames    = security.BlessingNames(principal, principal.BlessingStore().Default())
+		principal    = v23.GetPrincipal(ctx)
+		blessings, _ = principal.BlessingStore().Default()
+		bNames       = security.BlessingNames(principal, blessings)
 	)
 	return lockUserNhPrefix + vUser(bNames...)
 }
