@@ -14,6 +14,9 @@ import (
 	"v.io/v23/verror"
 )
 
+func __VDLEnsureNativeBuilt_errors() {
+}
+
 var (
 	ErrLockAlreadyClaimed = verror.Register("v.io/x/lock/lockd.LockAlreadyClaimed", verror.NoRetry, "{1:}{2:} lock has already been claimed")
 	ErrInvalidLockName    = verror.Register("v.io/x/lock/lockd.InvalidLockName", verror.NoRetry, "{1:}{2:} invalid lock name ({3}: cannot contain {4})")

@@ -38,8 +38,30 @@ func (LockStatus) __VDLReflect(struct {
 }) {
 }
 
+func (m LockStatus) FillVDLTarget(t vdl.Target, tt *vdl.Type) error {
+	if err := t.FromInt(int64(m), __VDLType_lock_v_io_x_lock_LockStatus); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m LockStatus) MakeVDLTarget() vdl.Target {
+	return nil
+}
+
+func (m LockStatus) IsZero() bool {
+
+	var1 := (m == LockStatus(0))
+	return var1
+}
+
 func init() {
 	vdl.Register((*LockStatus)(nil))
+}
+
+var __VDLType_lock_v_io_x_lock_LockStatus *vdl.Type = vdl.TypeOf(LockStatus(0))
+
+func __VDLEnsureNativeBuilt_lock() {
 }
 
 const Locked = LockStatus(0)

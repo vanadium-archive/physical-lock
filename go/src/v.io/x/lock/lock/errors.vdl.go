@@ -14,6 +14,9 @@ import (
 	"v.io/v23/verror"
 )
 
+func __VDLEnsureNativeBuilt_errors() {
+}
+
 var (
 	ErrKeyRejected = verror.Register("v.io/x/lock/lock.KeyRejected", verror.NoRetry, "{1:}{2:} receiver rejected key {3} for lock {4}")
 )
