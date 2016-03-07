@@ -49,12 +49,6 @@ func (m LockStatus) MakeVDLTarget() vdl.Target {
 	return nil
 }
 
-func (m LockStatus) IsZero() bool {
-
-	var1 := (m == LockStatus(0))
-	return var1
-}
-
 func init() {
 	vdl.Register((*LockStatus)(nil))
 }
