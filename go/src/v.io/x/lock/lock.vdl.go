@@ -20,14 +20,11 @@
 package lock
 
 import (
-	// VDL system imports
 	"v.io/v23"
 	"v.io/v23/context"
 	"v.io/v23/rpc"
-	"v.io/v23/vdl"
-
-	// VDL user imports
 	"v.io/v23/security"
+	"v.io/v23/vdl"
 )
 
 // LockStatus  indicates the status (locked or unlocked) of a lock.
