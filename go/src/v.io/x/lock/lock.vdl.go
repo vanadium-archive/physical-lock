@@ -58,6 +58,7 @@ func (t *LockStatusTarget) FromUint(src uint64, tt *vdl.Type) error {
 		return err
 	}
 	*t.Value = LockStatus(val)
+
 	return nil
 }
 func (t *LockStatusTarget) FromInt(src int64, tt *vdl.Type) error {
@@ -66,6 +67,7 @@ func (t *LockStatusTarget) FromInt(src int64, tt *vdl.Type) error {
 		return err
 	}
 	*t.Value = LockStatus(val)
+
 	return nil
 }
 func (t *LockStatusTarget) FromFloat(src float64, tt *vdl.Type) error {
@@ -74,6 +76,7 @@ func (t *LockStatusTarget) FromFloat(src float64, tt *vdl.Type) error {
 		return err
 	}
 	*t.Value = LockStatus(val)
+
 	return nil
 }
 func (t *LockStatusTarget) FromComplex(src complex128, tt *vdl.Type) error {
@@ -82,6 +85,7 @@ func (t *LockStatusTarget) FromComplex(src complex128, tt *vdl.Type) error {
 		return err
 	}
 	*t.Value = LockStatus(val)
+
 	return nil
 }
 
