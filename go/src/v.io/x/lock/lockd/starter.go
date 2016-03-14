@@ -58,14 +58,16 @@ func startUnclaimedLockServer(ctx *context.T, configDir string) (<-chan struct{}
 		return nil, nil, err
 	}
 	claimed := make(chan struct{})
+	ctx, cancel := context.WithCancel(ctx)
 	_, server, err := v23.WithNewServer(ctx, lockObjectName(ctx), newUnclaimedLock(claimed, configDir), security.AllowEveryone())
 	if err != nil {
 		stopMT()
 		return nil, nil, err
 	}
 	stopUnclaimedLock := func() {
+		cancel()
 		vlog.Infof("Stopping unclaimed lock server...")
-		server.Stop()
+		<-server.Closed()
 		vlog.Infof("Stopped unclaimed lock server...")
 		stopMT()
 	}
@@ -89,14 +91,16 @@ func startLockServer(ctx *context.T, configDir string) (func(), error) {
 		stopMT()
 		return nil, err
 	}
+	ctx, cancel := context.WithCancel(ctx)
 	_, server, err := v23.WithNewServer(ctx, lockObjectName(ctx), newLock(), security.DefaultAuthorizer())
 	if err != nil {
 		stopMT()
 		return nil, err
 	}
 	stopLock := func() {
+		cancel()
 		vlog.Infof("Stopping lock server...")
-		server.Stop()
+		<-server.Closed()
 		vlog.Infof("Stopped lock server...")
 		stopMT()
 	}

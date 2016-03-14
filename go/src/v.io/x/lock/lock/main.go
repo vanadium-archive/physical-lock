@@ -360,11 +360,15 @@ func runRecvKey(ctx *context.T, env *cmdline.Env, args []string) error {
 		env:    env,
 		notify: make(chan error),
 	}
+	ctx, cancel := context.WithCancel(ctx)
 	_, server, err := v23.WithNewServer(ctx, recvKeySuffix, service, security.AllowEveryone())
 	if err != nil {
 		return fmt.Errorf("failed to create server to receive keys: %v", err)
 	}
-	defer server.Stop()
+	defer func() {
+		cancel()
+		<-server.Closed()
+	}()
 	fmt.Println("Waiting for keys")
 	return <-service.notify
 }
