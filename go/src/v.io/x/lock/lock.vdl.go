@@ -53,6 +53,7 @@ type LockStatusTarget struct {
 }
 
 func (t *LockStatusTarget) FromUint(src uint64, tt *vdl.Type) error {
+
 	val, err := vdlconv.Uint64ToInt32(src)
 	if err != nil {
 		return err
@@ -62,6 +63,7 @@ func (t *LockStatusTarget) FromUint(src uint64, tt *vdl.Type) error {
 	return nil
 }
 func (t *LockStatusTarget) FromInt(src int64, tt *vdl.Type) error {
+
 	val, err := vdlconv.Int64ToInt32(src)
 	if err != nil {
 		return err
@@ -71,6 +73,7 @@ func (t *LockStatusTarget) FromInt(src int64, tt *vdl.Type) error {
 	return nil
 }
 func (t *LockStatusTarget) FromFloat(src float64, tt *vdl.Type) error {
+
 	val, err := vdlconv.Float64ToInt32(src)
 	if err != nil {
 		return err
@@ -80,6 +83,7 @@ func (t *LockStatusTarget) FromFloat(src float64, tt *vdl.Type) error {
 	return nil
 }
 func (t *LockStatusTarget) FromComplex(src complex128, tt *vdl.Type) error {
+
 	val, err := vdlconv.Complex128ToInt32(src)
 	if err != nil {
 		return err
