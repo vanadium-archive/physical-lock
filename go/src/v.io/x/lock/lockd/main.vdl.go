@@ -13,18 +13,14 @@ import (
 	"v.io/v23/verror"
 )
 
-func __VDLEnsureNativeBuilt() {
-}
+var _ = __VDLInit() // Must be first; see __VDLInit comments for details.
 
+//////////////////////////////////////////////////
+// Error definitions
 var (
 	ErrLockAlreadyClaimed = verror.Register("v.io/x/lock/lockd.LockAlreadyClaimed", verror.NoRetry, "{1:}{2:} lock has already been claimed")
 	ErrInvalidLockName    = verror.Register("v.io/x/lock/lockd.InvalidLockName", verror.NoRetry, "{1:}{2:} invalid lock name ({3}: cannot contain {4})")
 )
-
-func init() {
-	i18n.Cat().SetWithBase(i18n.LangID("en"), i18n.MsgID(ErrLockAlreadyClaimed.ID), "{1:}{2:} lock has already been claimed")
-	i18n.Cat().SetWithBase(i18n.LangID("en"), i18n.MsgID(ErrInvalidLockName.ID), "{1:}{2:} invalid lock name ({3}: cannot contain {4})")
-}
 
 // NewErrLockAlreadyClaimed returns an error with the ErrLockAlreadyClaimed ID.
 func NewErrLockAlreadyClaimed(ctx *context.T) error {
@@ -34,4 +30,31 @@ func NewErrLockAlreadyClaimed(ctx *context.T) error {
 // NewErrInvalidLockName returns an error with the ErrInvalidLockName ID.
 func NewErrInvalidLockName(ctx *context.T, name string, reason string) error {
 	return verror.New(ErrInvalidLockName, ctx, name, reason)
+}
+
+var __VDLInitCalled bool
+
+// __VDLInit performs vdl initialization.  It is safe to call multiple times.
+// If you have an init ordering issue, just insert the following line verbatim
+// into your source files in this package, right after the "package foo" clause:
+//
+//    var _ = __VDLInit()
+//
+// The purpose of this function is to ensure that vdl initialization occurs in
+// the right order, and very early in the init sequence.  In particular, vdl
+// registration and package variable initialization needs to occur before
+// functions like vdl.TypeOf will work properly.
+//
+// This function returns a dummy value, so that it can be used to initialize the
+// first var in the file, to take advantage of Go's defined init order.
+func __VDLInit() struct{} {
+	if __VDLInitCalled {
+		return struct{}{}
+	}
+
+	// Set error format strings.
+	i18n.Cat().SetWithBase(i18n.LangID("en"), i18n.MsgID(ErrLockAlreadyClaimed.ID), "{1:}{2:} lock has already been claimed")
+	i18n.Cat().SetWithBase(i18n.LangID("en"), i18n.MsgID(ErrInvalidLockName.ID), "{1:}{2:} invalid lock name ({3}: cannot contain {4})")
+
+	return struct{}{}
 }

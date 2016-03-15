@@ -28,6 +28,11 @@ import (
 	"v.io/v23/vdl/vdlconv"
 )
 
+var _ = __VDLInit() // Must be first; see __VDLInit comments for details.
+
+//////////////////////////////////////////////////
+// Type definitions
+
 // LockStatus  indicates the status (locked or unlocked) of a lock.
 type LockStatus int32
 
@@ -37,7 +42,7 @@ func (LockStatus) __VDLReflect(struct {
 }
 
 func (m *LockStatus) FillVDLTarget(t vdl.Target, tt *vdl.Type) error {
-	if err := t.FromInt(int64((*m)), __VDLType_v_io_x_lock_LockStatus); err != nil {
+	if err := t.FromInt(int64((*m)), tt); err != nil {
 		return err
 	}
 	return nil
@@ -93,18 +98,14 @@ func (t *LockStatusTarget) FromComplex(src complex128, tt *vdl.Type) error {
 	return nil
 }
 
-func init() {
-	vdl.Register((*LockStatus)(nil))
-}
-
-var __VDLType_v_io_x_lock_LockStatus *vdl.Type = vdl.TypeOf(LockStatus(0))
-
-func __VDLEnsureNativeBuilt() {
-}
+//////////////////////////////////////////////////
+// Const definitions
 
 const Locked = LockStatus(0)
-
 const Unlocked = LockStatus(1)
+
+//////////////////////////////////////////////////
+// Interface definitions
 
 // UnclaimedLockClientMethods is the client interface
 // containing UnclaimedLock methods.
@@ -381,4 +382,30 @@ var descLock = rpc.InterfaceDesc{
 			},
 		},
 	},
+}
+
+var __VDLInitCalled bool
+
+// __VDLInit performs vdl initialization.  It is safe to call multiple times.
+// If you have an init ordering issue, just insert the following line verbatim
+// into your source files in this package, right after the "package foo" clause:
+//
+//    var _ = __VDLInit()
+//
+// The purpose of this function is to ensure that vdl initialization occurs in
+// the right order, and very early in the init sequence.  In particular, vdl
+// registration and package variable initialization needs to occur before
+// functions like vdl.TypeOf will work properly.
+//
+// This function returns a dummy value, so that it can be used to initialize the
+// first var in the file, to take advantage of Go's defined init order.
+func __VDLInit() struct{} {
+	if __VDLInitCalled {
+		return struct{}{}
+	}
+
+	// Register types.
+	vdl.Register((*LockStatus)(nil))
+
+	return struct{}{}
 }
