@@ -98,6 +98,11 @@ func (t *LockStatusTarget) FromComplex(src complex128, tt *vdl.Type) error {
 	return nil
 }
 
+// Create zero values for each type.
+var (
+	__VDLZeroLockStatus = LockStatus(0)
+)
+
 //////////////////////////////////////////////////
 // Const definitions
 
