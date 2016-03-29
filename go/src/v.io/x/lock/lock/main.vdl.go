@@ -45,6 +45,7 @@ func __VDLInit() struct{} {
 	if __VDLInitCalled {
 		return struct{}{}
 	}
+	__VDLInitCalled = true
 
 	// Set error format strings.
 	i18n.Cat().SetWithBase(i18n.LangID("en"), i18n.MsgID(ErrKeyRejected.ID), "{1:}{2:} receiver rejected key {3} for lock {4}")

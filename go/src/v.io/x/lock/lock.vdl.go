@@ -87,11 +87,10 @@ func (t *LockStatusTarget) FromFloat(src float64, tt *vdl.Type) error {
 
 	return nil
 }
-
-// Create zero values for each type.
-var (
-	__VDLZeroLockStatus = LockStatus(0)
-)
+func (t *LockStatusTarget) FromZero(tt *vdl.Type) error {
+	*t.Value = LockStatus(0)
+	return nil
+}
 
 //////////////////////////////////////////////////
 // Const definitions
@@ -398,6 +397,7 @@ func __VDLInit() struct{} {
 	if __VDLInitCalled {
 		return struct{}{}
 	}
+	__VDLInitCalled = true
 
 	// Register types.
 	vdl.Register((*LockStatus)(nil))
