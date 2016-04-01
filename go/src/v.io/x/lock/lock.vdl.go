@@ -87,10 +87,6 @@ func (t *LockStatusTarget) FromFloat(src float64, tt *vdl.Type) error {
 
 	return nil
 }
-func (t *LockStatusTarget) FromZero(tt *vdl.Type) error {
-	*t.Value = LockStatus(0)
-	return nil
-}
 
 //////////////////////////////////////////////////
 // Const definitions
