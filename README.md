@@ -317,4 +317,4 @@ In the future, we would like to support at least the following caveats:
   to ask the granter for permission before using a key.
 
 [MDNS]: http://en.wikipedia.org/wiki/Multicast_DNS
-[agent]: https://github.com/vanadium/docs/blob/master/glossary.md#agent
+[agent]: https://vanadium.github.io/glossary.html#agent
