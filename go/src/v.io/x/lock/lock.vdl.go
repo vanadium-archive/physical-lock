@@ -88,6 +88,19 @@ func (t *LockStatusTarget) FromFloat(src float64, tt *vdl.Type) error {
 	return nil
 }
 
+func (x *LockStatus) VDLRead(dec vdl.Decoder) error {
+	var err error
+	if err = dec.StartValue(); err != nil {
+		return err
+	}
+	tmp, err := dec.DecodeInt(32)
+	if err != nil {
+		return err
+	}
+	*x = LockStatus(tmp)
+	return dec.FinishValue()
+}
+
 //////////////////////////////////////////////////
 // Const definitions
 
