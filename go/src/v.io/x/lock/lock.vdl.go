@@ -101,6 +101,16 @@ func (x *LockStatus) VDLRead(dec vdl.Decoder) error {
 	return dec.FinishValue()
 }
 
+func (x LockStatus) VDLWrite(enc vdl.Encoder) error {
+	if err := enc.StartValue(vdl.TypeOf((*LockStatus)(nil))); err != nil {
+		return err
+	}
+	if err := enc.EncodeInt(int64(x)); err != nil {
+		return err
+	}
+	return enc.FinishValue()
+}
+
 //////////////////////////////////////////////////
 // Const definitions
 
