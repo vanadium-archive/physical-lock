@@ -17,6 +17,7 @@ var _ = __VDLInit() // Must be first; see __VDLInit comments for details.
 
 //////////////////////////////////////////////////
 // Error definitions
+
 var (
 	ErrKeyRejected = verror.Register("v.io/x/lock/lock.KeyRejected", verror.NoRetry, "{1:}{2:} receiver rejected key {3} for lock {4}")
 )
