@@ -88,8 +88,8 @@ func (t *LockStatusTarget) FromFloat(src float64, tt *vdl.Type) error {
 	return nil
 }
 
-func (x LockStatus) VDLIsZero() (bool, error) {
-	return x == 0, nil
+func (x LockStatus) VDLIsZero() bool {
+	return x == 0
 }
 
 func (x LockStatus) VDLWrite(enc vdl.Encoder) error {
