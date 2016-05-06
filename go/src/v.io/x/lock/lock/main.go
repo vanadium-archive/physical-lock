@@ -200,7 +200,7 @@ func doGlob(ctx *context.T, globPrefix string) error {
 			case *naming.GlobReplyEntry:
 				if name, servers := entry.Value.Name, entry.Value.Servers; len(name) != 0 && !found[name] && len(servers) != 0 {
 					epStr, _ := naming.SplitAddressName(servers[0].Server)
-					ep, err := v23.NewEndpoint(epStr)
+					ep, err := naming.ParseEndpoint(epStr)
 					if err != nil {
 						continue
 					}
