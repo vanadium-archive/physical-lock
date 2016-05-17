@@ -25,7 +25,6 @@ import (
 	"v.io/v23/rpc"
 	"v.io/v23/security"
 	"v.io/v23/vdl"
-	"v.io/v23/vdl/vdlconv"
 )
 
 var _ = __VDLInit() // Must be first; see __VDLInit comments for details.
@@ -39,53 +38,6 @@ type LockStatus int32
 func (LockStatus) __VDLReflect(struct {
 	Name string `vdl:"v.io/x/lock.LockStatus"`
 }) {
-}
-
-func (m *LockStatus) FillVDLTarget(t vdl.Target, tt *vdl.Type) error {
-	if err := t.FromInt(int64((*m)), tt); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (m *LockStatus) MakeVDLTarget() vdl.Target {
-	return &LockStatusTarget{Value: m}
-}
-
-type LockStatusTarget struct {
-	Value *LockStatus
-	vdl.TargetBase
-}
-
-func (t *LockStatusTarget) FromUint(src uint64, tt *vdl.Type) error {
-
-	val, err := vdlconv.Uint64ToInt32(src)
-	if err != nil {
-		return err
-	}
-	*t.Value = LockStatus(val)
-
-	return nil
-}
-func (t *LockStatusTarget) FromInt(src int64, tt *vdl.Type) error {
-
-	val, err := vdlconv.Int64ToInt32(src)
-	if err != nil {
-		return err
-	}
-	*t.Value = LockStatus(val)
-
-	return nil
-}
-func (t *LockStatusTarget) FromFloat(src float64, tt *vdl.Type) error {
-
-	val, err := vdlconv.Float64ToInt32(src)
-	if err != nil {
-		return err
-	}
-	*t.Value = LockStatus(val)
-
-	return nil
 }
 
 func (x LockStatus) VDLIsZero() bool {
