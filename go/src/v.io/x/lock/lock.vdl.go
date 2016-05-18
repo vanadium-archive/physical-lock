@@ -45,7 +45,7 @@ func (x LockStatus) VDLIsZero() bool {
 }
 
 func (x LockStatus) VDLWrite(enc vdl.Encoder) error {
-	if err := enc.StartValue(vdl.TypeOf((*LockStatus)(nil))); err != nil {
+	if err := enc.StartValue(__VDLType_int32_1); err != nil {
 		return err
 	}
 	if err := enc.EncodeInt(int64(x)); err != nil {
@@ -55,7 +55,7 @@ func (x LockStatus) VDLWrite(enc vdl.Encoder) error {
 }
 
 func (x *LockStatus) VDLRead(dec vdl.Decoder) error {
-	if err := dec.StartValue(); err != nil {
+	if err := dec.StartValue(__VDLType_int32_1); err != nil {
 		return err
 	}
 	tmp, err := dec.DecodeInt(32)
@@ -352,6 +352,11 @@ var descLock = rpc.InterfaceDesc{
 	},
 }
 
+// Hold type definitions in package-level variables, for better performance.
+var (
+	__VDLType_int32_1 *vdl.Type
+)
+
 var __VDLInitCalled bool
 
 // __VDLInit performs vdl initialization.  It is safe to call multiple times.
@@ -375,6 +380,9 @@ func __VDLInit() struct{} {
 
 	// Register types.
 	vdl.Register((*LockStatus)(nil))
+
+	// Initialize type definitions.
+	__VDLType_int32_1 = vdl.TypeOf((*LockStatus)(nil))
 
 	return struct{}{}
 }
