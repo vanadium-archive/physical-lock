@@ -55,15 +55,13 @@ func (x LockStatus) VDLWrite(enc vdl.Encoder) error {
 }
 
 func (x *LockStatus) VDLRead(dec vdl.Decoder) error {
-	if err := dec.StartValue(__VDLType_int32_1); err != nil {
+	switch value, err := dec.ReadValueInt(32); {
+	case err != nil:
 		return err
+	default:
+		*x = LockStatus(value)
 	}
-	tmp, err := dec.DecodeInt(32)
-	if err != nil {
-		return err
-	}
-	*x = LockStatus(tmp)
-	return dec.FinishValue()
+	return nil
 }
 
 //////////////////////////////////////////////////
