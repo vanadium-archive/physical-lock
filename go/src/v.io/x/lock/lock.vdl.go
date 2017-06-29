@@ -35,7 +35,7 @@ var _ = __VDLInit() // Must be first; see __VDLInit comments for details.
 // LockStatus  indicates the status (locked or unlocked) of a lock.
 type LockStatus int32
 
-func (LockStatus) __VDLReflect(struct {
+func (LockStatus) VDLReflect(struct {
 	Name string `vdl:"v.io/x/lock.LockStatus"`
 }) {
 }
